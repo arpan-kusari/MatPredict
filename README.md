@@ -85,4 +85,28 @@ python blender_render_code/generate_dataset.py
 
 - item Rendering ≈ 40 min per object on a 12-core CPU + RTX 4070 GPU.
 
+
+## 5 Train a Baseline Model
+# example: Restnet50 backbone
+```python
+python train.py
+# remember to change the configuration parameters inside the python code
+```
+# the model will be saved at model/ directory 
+
+## 6 Test a Baseline Model 
+```python
+python test_benchmarks.py
+# remember to change the configuration parameters inside the python code
+```
+
+## 6 Citation
+ 
+@dataset{chen2025matpredict,
+  title  = {MatPredict: A Dataset and Benchmark for Learning Material Properties of Diverse Indoor Objects},
+  author = {Yuzhen Chen and Hojun Son and Arpan Kusari},
+  year   = {2025},
+  url    = {https://huggingface.co/datasets/UMTRI/MatPredict}
+}
+
  
