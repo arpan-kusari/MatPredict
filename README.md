@@ -34,11 +34,11 @@ hf_hub_download(repo_id="UMTRI/MatPredict",
  
 ## 3 Environment — create from YAML
 
-# create the conda environment
+### create the conda environment
 conda env create -f environment.yaml
 conda activate matpredict
 
-# sanity check
+#### sanity check
 ```python
 python -c "import torch, blenderproc; print('✅  environment ready')"
 environment.yaml installs
@@ -55,23 +55,23 @@ OpenCV, PyYAML, tqdm …
 
 
 ## 4 Generate the Dataset Locally
-# activate env
+### activate env
 conda activate matpredict
 
-# clone this repo
+### clone this repo
 git clone git@github.com:arpan-kusari/MatPredict.git
 cd MatPredict
 
-# tell BlenderProc where the source assets live
+### tell BlenderProc where the source assets live
 export REPLICA_ROOT=/path/to/Replica-Dataset
 export MATSYNTH_ROOT=/path/to/MatSynth
 
-# launch the generator
+### launch the generator
 ```python
 python blender_render_code/generate_dataset.py
 ```
 
-# What the script does
+### What the script does
 
 - item Extract each foreground mesh from Replica.
 
@@ -87,12 +87,12 @@ python blender_render_code/generate_dataset.py
 
 
 ## 5 Train a Baseline Model
-# example: Restnet50 backbone
+### example: Restnet50 backbone
 ```python
 python train.py
 # remember to change the configuration parameters inside the python code
 ```
-# the model will be saved at model/ directory 
+### the model will be saved at model/ directory 
 
 ## 6 Test a Baseline Model 
 ```python
@@ -100,13 +100,13 @@ python test_benchmarks.py
 # remember to change the configuration parameters inside the python code
 ```
 
-## 6 Citation
- 
+## 7 Citation
+```bibtex
 @dataset{chen2025matpredict,
   title  = {MatPredict: A Dataset and Benchmark for Learning Material Properties of Diverse Indoor Objects},
   author = {Yuzhen Chen and Hojun Son and Arpan Kusari},
   year   = {2025},
   url    = {https://huggingface.co/datasets/UMTRI/MatPredict}
 }
-
+```
  
