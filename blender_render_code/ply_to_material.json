@@ -1,0 +1,176 @@
+{
+    "base_path": "/home/yuzhen/Desktop/CVPR/Replica-Dataset/mini_test_dataset/matsynth_material",
+    "object":[
+        {
+            "ply_file_path": [
+                "/home/yuzhen/Desktop/CVPR/Replica-Dataset/mini_test_dataset/room_0/mesh_folder/mesh_semantic.ply_2.ply"
+            ],
+            "textures": {
+                "base_color": "/Wood/0582_pw_plank_wood_base/basecolor.png",
+                "metallic": "/Wood/0582_pw_plank_wood_base/metallic.png",
+                "normal": "/Wood/0582_pw_plank_wood_base/normal.png",
+                "roughness": "/Wood/0582_pw_plank_wood_base/roughness.png",
+                "opacity": "/Wood/0582_pw_plank_wood_base/opacity.png",
+                "specular": "/Wood/0582_pw_plank_wood_base/specular.png"
+            }
+        },
+        
+        {
+            "ply_file_path": [
+                "/home/yuzhen/Desktop/CVPR/Replica-Dataset/mini_test_dataset/room_0/mesh_folder/mesh_semantic.ply_11.ply"
+            ],
+            "textures": {
+                "base_color": "/Wood/0515_wood_024_walnut/basecolor.png",
+                "metallic": "/Wood/0515_wood_024_walnut/metallic.png",
+                "normal": "/Wood/0515_wood_024_walnut/normal.png",
+                "roughness": "/Wood/0515_wood_024_walnut/roughness.png",
+                "opacity": "/Wood/0515_wood_024_walnut/opacity.png",
+                "specular": "/Wood/0515_wood_024_walnut/specular.png"
+            }
+        },
+        {
+            "ply_file_path": [
+                "/home/yuzhen/Desktop/CVPR/Replica-Dataset/mini_test_dataset/room_0/mesh_folder/mesh_semantic.ply_36.ply"
+            ],
+            "textures": {
+                "base_color": "/Wood/0430_pw_wood_log/basecolor.png",
+                "metallic": "/Wood/0430_pw_wood_log/metallic.png",
+                "normal": "/Wood/0430_pw_wood_log/normal.png",
+                "roughness": "/Wood/0430_pw_wood_log/roughness.png",
+                "opacity": "/Wood/0430_pw_wood_log/opacity.png",
+                "specular": "/Wood/0430_pw_wood_log/specular.png"
+            }
+        },
+        {
+            "ply_file_path":[ 
+                "/home/yuzhen/Desktop/CVPR/Replica-Dataset/mini_test_dataset/room_0/mesh_folder/mesh_semantic.ply_10.ply",
+                "/home/yuzhen/Desktop/CVPR/Replica-Dataset/mini_test_dataset/room_0/mesh_folder/mesh_semantic.ply_93.ply",
+                "/home/yuzhen/Desktop/CVPR/Replica-Dataset/mini_test_dataset/room_0/mesh_folder/mesh_semantic.ply_7.ply",
+                "/home/yuzhen/Desktop/CVPR/Replica-Dataset/mini_test_dataset/room_0/mesh_folder/mesh_semantic.ply_27.ply"
+            ],
+            "textures": {
+                "base_color": "/Wood/acg_planks_023_a/basecolor.png",
+                "metallic": "/Wood/acg_planks_023_a/metallic.png",
+                "normal": "/Wood/acg_planks_023_a/normal.png",
+                "roughness": "/Wood/acg_planks_023_a/roughness.png",
+                "opacity": "/Wood/acg_planks_023_a/opacity.png",
+                "specular": "/Wood/0430_pw_wood_log/specular.png"
+            }
+        },
+
+
+
+
+
+
+
+
+        {
+            "ply_file_path": [
+                "/home/yuzhen/Desktop/CVPR/Replica-Dataset/mini_test_dataset/room_0/mesh_folder/mesh_semantic.ply_60.ply"
+            ],
+            "textures": {
+                "base_color": "/Fabric/0141_fabric_suit_vintage/basecolor.png",
+                "metallic": "/Fabric/0141_fabric_suit_vintage/metallic.png",
+                "normal": "/Fabric/0141_fabric_suit_vintage/normal.png",
+                "roughness": "/Fabric/0141_fabric_suit_vintage/roughness.png",
+                "opacity": "/Fabric/0141_fabric_suit_vintage/opacity.png",
+                "specular": "/Fabric/0141_fabric_suit_vintage/specular.png"
+            }
+        },
+        {
+            "ply_file_path": [
+                "/home/yuzhen/Desktop/CVPR/Replica-Dataset/mini_test_dataset/room_0/mesh_folder/mesh_semantic.ply_32.ply",
+                "/home/yuzhen/Desktop/CVPR/Replica-Dataset/mini_test_dataset/room_0/mesh_folder/mesh_semantic.ply_13.ply",
+                "/home/yuzhen/Desktop/CVPR/Replica-Dataset/mini_test_dataset/room_0/mesh_folder/mesh_semantic.ply_72.ply",
+                "/home/yuzhen/Desktop/CVPR/Replica-Dataset/mini_test_dataset/room_0/mesh_folder/mesh_semantic.ply_8.ply",
+                "/home/yuzhen/Desktop/CVPR/Replica-Dataset/mini_test_dataset/room_0/mesh_folder/mesh_semantic.ply_18.ply"
+            ],
+            "textures": {
+                "base_color": "/Fabric/0354_pw_cotton_fabric/basecolor.png",
+                "metallic": "/Fabric/0354_pw_cotton_fabric/metallic.png",
+                "normal": "/Fabric/0354_pw_cotton_fabric/normal.png",
+                "roughness": "/Fabric/0354_pw_cotton_fabric/roughness.png",
+                "opacity": "/Fabric/0354_pw_cotton_fabric/opacity.png",
+                "specular": "/Fabric/0354_pw_cotton_fabric/specular.png"
+            }
+        },
+        {
+            "ply_file_path": [
+                "/home/yuzhen/Desktop/CVPR/Replica-Dataset/mini_test_dataset/room_0/mesh_folder/mesh_semantic.ply_9.ply",
+                "/home/yuzhen/Desktop/CVPR/Replica-Dataset/mini_test_dataset/room_0/mesh_folder/mesh_semantic.ply_77.ply"
+                 
+            ],
+            "textures": {
+                "base_color": "/Fabric/0772_fabric_cotton/basecolor.png",
+                "metallic": "/Fabric/0772_fabric_cotton/metallic.png",
+                "normal": "/Fabric/0772_fabric_cotton/normal.png",
+                "roughness": "/Fabric/0772_fabric_cotton/roughness.png",
+                "opacity": "/Fabric/0772_fabric_cotton/opacity.png",
+                "specular": "/Fabric/0772_fabric_cotton/specular.png"
+            }
+        },
+        {
+            "ply_file_path": [
+                "/home/yuzhen/Desktop/CVPR/Replica-Dataset/mini_test_dataset/room_0/mesh_folder/mesh_semantic.ply_39.ply",
+                "/home/yuzhen/Desktop/CVPR/Replica-Dataset/mini_test_dataset/room_0/mesh_folder/mesh_semantic.ply_41.ply"
+                 
+            ],
+            "textures": {
+                "base_color": "/Fabric/tc_fabric_024/basecolor.png",
+                "metallic": "/Fabric/tc_fabric_024/metallic.png",
+                "normal": "/Fabric/tc_fabric_024/normal.png",
+                "roughness": "/Fabric/tc_fabric_024/roughness.png",
+                "opacity": "/Fabric/tc_fabric_024/opacity.png",
+                "specular": "/Fabric/tc_fabric_024/specular.png"
+            }
+        },
+        {
+            "ply_file_path": [
+                "/home/yuzhen/Desktop/CVPR/Replica-Dataset/mini_test_dataset/room_0/mesh_folder/mesh_semantic.ply_73.ply",
+                "/home/yuzhen/Desktop/CVPR/Replica-Dataset/mini_test_dataset/room_0/mesh_folder/mesh_semantic.ply_74.ply"
+                 
+            ],
+            "textures": {
+                "base_color": "/Fabric/js_fabric_pattern_003_004/basecolor.png",
+                "metallic": "/Fabric/js_fabric_pattern_003_004/metallic.png",
+                "normal": "/Fabric/js_fabric_pattern_003_004/normal.png",
+                "roughness": "/Fabric/js_fabric_pattern_003_004/roughness.png",
+                "opacity": "/Fabric/js_fabric_pattern_003_004/opacity.png",
+                "specular": "/Fabric/js_fabric_pattern_003_004/specular.png"
+            }
+        },
+        {
+            "ply_file_path": [
+                "/home/yuzhen/Desktop/CVPR/Replica-Dataset/mini_test_dataset/room_0/mesh_folder/mesh_semantic.ply_5.ply",
+                "/home/yuzhen/Desktop/CVPR/Replica-Dataset/mini_test_dataset/room_0/mesh_folder/mesh_semantic.ply_69.ply",
+                "/home/yuzhen/Desktop/CVPR/Replica-Dataset/mini_test_dataset/room_0/mesh_folder/mesh_semantic.ply_70.ply",
+                "/home/yuzhen/Desktop/CVPR/Replica-Dataset/mini_test_dataset/room_0/mesh_folder/mesh_semantic.ply_71.ply"
+                 
+            ],
+            "textures": {
+                "base_color": "/Fabric/acg_fabric_060/basecolor.png",
+                "metallic": "/Fabric/acg_fabric_060/metallic.png",
+                "normal": "/Fabric/acg_fabric_060/normal.png",
+                "roughness": "/Fabric/acg_fabric_060/roughness.png",
+                "opacity": "/Fabric/acg_fabric_060/opacity.png",
+                "specular": "/Fabric/acg_fabric_060/specular.png"
+            }
+        },
+        {
+            "ply_file_path": [
+                "/home/yuzhen/Desktop/CVPR/Replica-Dataset/mini_test_dataset/room_0/mesh_folder/mesh_semantic.ply_86.ply"
+               
+                 
+            ],
+            "textures": {
+                "base_color": "/Fabric/acg_fabric_054/basecolor.png",
+                "metallic": "/Fabric/acg_fabric_054/metallic.png",
+                "normal": "/Fabric/acg_fabric_054/normal.png",
+                "roughness": "/Fabric/acg_fabric_054/roughness.png",
+                "opacity": "/Fabric/acg_fabric_054/opacity.png",
+                "specular": "/Fabric/acg_fabric_054/specular.png"
+            }
+        }
+    ]
+}
