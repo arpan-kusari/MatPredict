@@ -9,7 +9,7 @@ This repository contains **(1)** scripts to re-generate the dataset from scratch
 
 | Resource | Link | What we use it for |
 |----------|------|--------------------|
-| **MatSynth** (4000 + PBR materials, CC-0) | <https://github.com/Magicoe/MatSynth> | Randomly sampled to create diverse material stacks (base-colour, roughness, metallic, etc.). |
+| **MatSynth** (4000 + PBR materials, CC-0) | <https://huggingface.co/datasets/gvecchio/MatSynth>| Randomly sampled to create diverse material stacks (base-colour, roughness, metallic, etc.). |
 | **Replica** (18 photorealistic indoor scans) | <https://github.com/facebookresearch/Replica-Dataset> | Source of high-quality object meshes and HDR textures. |
 
 ---
