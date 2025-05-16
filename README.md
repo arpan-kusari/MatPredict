@@ -28,3 +28,24 @@ hf_hub_download(repo_id="UMTRI/MatPredict",
                 filename="MatPredict_dataset.tar.zst",
                 repo_type="dataset",
                 local_dir="./data")
+```
+
+
+ 
+## 3 Environment — create from YAML
+
+# create the conda environment
+conda env create -f environment.yaml
+conda activate matpredict
+
+# sanity check
+python -c "import torch, blenderproc; print('✅  environment ready')"
+environment.yaml installs
+
+Python 3.10
+
+PyTorch ≥ 2.2 (CUDA 11.8)
+
+BlenderProc 3.3
+
+OpenCV, PyYAML, tqdm …
