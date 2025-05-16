@@ -39,8 +39,10 @@ conda env create -f environment.yaml
 conda activate matpredict
 
 # sanity check
+```python
 python -c "import torch, blenderproc; print('✅  environment ready')"
 environment.yaml installs
+```
 
 Python 3.10
 
@@ -65,20 +67,22 @@ export REPLICA_ROOT=/path/to/Replica-Dataset
 export MATSYNTH_ROOT=/path/to/MatSynth
 
 # launch the generator
-python blender_render_code/generate_dataset.py 
-        
-What the script does
+```python
+python blender_render_code/generate_dataset.py
+```
 
-Extract each foreground mesh from Replica.
+# What the script does
 
-Smart-unwrap UVs & normalise texel density.
+- item Extract each foreground mesh from Replica.
 
-Attach a random MatSynth material.
+- item Smart-unwrap UVs & normalise texel density.
 
-Set up BlenderProc scene (lights + spherical camera rig).
+- item Attach a random MatSynth material.
 
-Render RGB / normal / depth images in parallel.
+- item Set up BlenderProc scene (lights + spherical camera rig).
 
-Rendering ≈ 40 min per object on a 12-core CPU + RTX 4070 GPU.
+- item Render RGB / normal / depth images in parallel.
+
+- item Rendering ≈ 40 min per object on a 12-core CPU + RTX 4070 GPU.
 
  
