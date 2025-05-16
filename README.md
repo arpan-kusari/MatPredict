@@ -18,7 +18,7 @@ This repository contains **(1)** scripts to re-generate the dataset from scratch
 
 | Split | Size | Direct link |
 |-------|------|-------------|
-| **Full v1.0** | 110 GB | <https://huggingface.co/datasets/UMTRI/MatPredict> | 
+| **Full v1.0** | 120 GB | <https://huggingface.co/datasets/UMTRI/MatPredict> | 
 
 Quick download (Python):
 
