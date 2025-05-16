@@ -1,4 +1,4 @@
-name: ICCV
+name: matpredict
 channels:
   - defaults
   - conda-forge
@@ -492,4 +492,4 @@ dependencies:
       - widgetsnbextension==4.0.13
       - yacs==0.1.8
       - yapf==0.43.0
-prefix: /home/yuzhench/miniconda3/envs/ICCV
+
