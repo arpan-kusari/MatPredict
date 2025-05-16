@@ -18,14 +18,13 @@ This repository contains **(1)** scripts to re-generate the dataset from scratch
 
 | Split | Size | Direct link |
 |-------|------|-------------|
-| **Full v1.0** | 110 GB | <https://huggingface.co/datasets/UMTRI/MatPredict> |
-| **Mini (v1.0 1-scene subset)** | 3.2 GB | <https://huggingface.co/datasets/UMTRI/MatPredict/tree/main/mini> |
+| **Full v1.0** | 110 GB | <https://huggingface.co/datasets/UMTRI/MatPredict> | 
 
 Quick download (Python):
 
 ```python
 from huggingface_hub import hf_hub_download
 hf_hub_download(repo_id="UMTRI/MatPredict",
-                filename="mini.tar.zst",
+                filename="MatPredict_dataset.tar.zst",
                 repo_type="dataset",
                 local_dir="./data")
