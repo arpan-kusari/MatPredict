@@ -11,7 +11,7 @@ generation and benchmark models for two tasks:
 
 | Resource | Link | Use |
 | --- | --- | --- |
-| MatPredict dataset | <https://huggingface.co/datasets/UMTRI/MatPredict> | Pre-generated dataset and benchmark data |
+| MatPredict dataset | Anonymous dataset link will be provided for review | Pre-generated dataset and benchmark data |
 | MatSynth | <https://huggingface.co/datasets/gvecchio/MatSynth> | Source PBR material library |
 | ReplicaCAD assets | <https://aihabitat.org/datasets/replica_cad> | Source object meshes |
 
@@ -54,7 +54,6 @@ The downloaded dataset is organized as:
 ```text
 MatPredictDataset/
   material_segmentation_map.yaml
-  material_segmentation_train_config.yaml
   config/
     object_disjoint_v1.yaml
     variance_disjoint_v1.yaml
@@ -219,13 +218,6 @@ For `task_mode: material`, inference writes:
 - `pred_material_color.png`
 - `panel.png`
 
-<!-- ## Citation
+## Citation
 
-```bibtex
-@dataset{chen2025matpredict,
-  title  = {MatPredict: A Dataset and Benchmark for Learning Material Properties of Diverse Indoor Objects},
-  author = {Yuzhen Chen and Hojun Son and Arpan Kusari},
-  year   = {2025},
-  url    = {https://huggingface.co/datasets/UMTRI/MatPredict}
-}
-``` -->
+Citation information will be added after the review period.
