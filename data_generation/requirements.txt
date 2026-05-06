@@ -1,0 +1,12 @@
+# Direct runtime dependencies for data_generation/generate_dataset.py.
+# These versions match the tested BlenderProc conda environment.
+blenderproc==2.8.0
+numpy==2.4.3
+PyYAML==6.0.3
+imageio==2.37.2
+pillow==12.2.0
+
+# Used by the optional CLIP-based view deduplication backend.
+torch==2.5.1
+torchvision==0.20.1
+transformers==5.5.4

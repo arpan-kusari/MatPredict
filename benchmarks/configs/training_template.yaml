@@ -1,0 +1,78 @@
+# Training template for benchmarks/scripts/train.py.
+# Recommended command:
+#   cd /path/to/MatPredict/benchmarks
+#   python scripts/train.py --config ./configs/training_template.yaml
+#
+# Split protocol:
+# - Object-disjoint split:
+#     split_file: ./dataset/splits/object_disjoint_v1.yaml
+#   Samples are grouped by object id before train/val/test assignment.
+#   A held-out object does not appear in the other splits.
+# - Variance-disjoint split:
+#     split_file: ./dataset/splits/variance_disjoint_v1.yaml
+#   Samples are grouped by variant id, such as var000/var001, before assignment.
+#   A held-out variant id does not appear in the other splits.
+# - "Disjoint" means the grouping key for that split strategy is not shared
+#   between train, val, and test.
+#
+# Model choice:
+# - resnet50_unet
+# - swin_t_unet
+#
+# Task choice:
+# - Inverse rendering: task_mode: pbr
+#   Predicts albedo, roughness, and metallic maps.
+# - Material segmentation: task_mode: material
+#   Predicts material class logits. Set material_num_classes to match labels.
+
+dataset_root: '/path/to/MatPredictDataset'
+split_file: ./dataset/splits/object_disjoint_v1.yaml
+pretrained_model: null
+
+model_name: resnet50_unet
+output_dir: ./outputs/object_disjoint_resnet50_pbr
+
+image_size: 512
+batch_size: 4
+epochs: 30
+num_workers: 8
+
+validate_every: 5
+num_vis_samples: 4
+val_vis_ids_file: null
+
+lr: 0.0001
+weight_decay: 0.01
+optimizer_name: adamw
+optimizer_momentum: 0.9
+
+# Use pbr for inverse rendering, or material for material segmentation.
+task_mode: pbr
+
+# Inverse-rendering loss weights. Used only when task_mode is pbr.
+albedo_weight: 1.0
+roughness_weight: 1.0
+metallic_weight: 1.0
+
+# Material-segmentation settings. Used only when task_mode is material.
+# Typical material setup:
+#   task_mode: material
+#   material_num_classes: 8
+#   material_weight: 0.0
+#   material_ce_weight: 1.0
+material_weight: 0.0
+material_ce_weight: 1.0
+material_num_classes: null
+material_map_file: null
+material_ignore_background: false
+
+seed: 42
+no_pretrained: false
+
+use_wandb: false
+wandb_project: matpredict_segmentation
+wandb_run_name: object_disjoint_resnet50_pbr
+
+append_timestamp: true
+timestamp_format: "%Y%m%d_%H%M%S"
+log_path: logs/train_{ts}.log

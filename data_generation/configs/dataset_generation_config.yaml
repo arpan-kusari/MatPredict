@@ -1,0 +1,75 @@
+# Dataset generation example config
+# Manual slot material assignment using material keys: mat1, mat2, mat3...
+
+global:
+  output_root: '/path/to/output'
+  materials_root: '/path/to/material'
+  continue_on_error: true
+  seed: 42
+  variant_generation:
+    strategy: "cartesian"            # cartesian | zip
+    max_variants: 10                 # cap per object, null for unlimited
+
+render:
+  resolution: { width: 512, height: 512 }
+  samples: 32
+  depth_scale: 5000
+  rgb:
+    view_transform: "Standard"
+    exposure: 1.2
+  lighting:
+    mode: "fixed_three_point"        # three_point_random | fixed_three_point
+    ambient_strength: 0.12
+    key_energy: [700, 1400]
+    fill_energy: [250, 600]
+    rim_energy: [300, 900]
+    reference_radius: 1.8
+    key_soft_size: 1.0
+    fill_soft_size: 3.0
+    rim_soft_size: 1.5
+  radius:
+    mode: "bbox_auto"
+    min: 1.0
+    max: null
+  camera:
+    azimuth_deg: [0, 45, 90, 135, 180, 225, 270, 315]
+    elevation_deg: [15, 30, 45]
+  image_matching:
+    enabled: true
+    clip_top_k: 5
+    ssim_distance_threshold: 0.04
+    iou_threshold: 0.93
+
+objects:
+  # Example 1: single-material object.
+  # All Blender material slots are assigned to one abstract material key.
+  - name: "single_material_example"
+    obj_path: '/path/to/replica_cad/objects/example_bowl.glb'
+    enabled: true
+    output_subdir: "single_material_example"
+
+    material_candidates:
+      mat1: ["plastic_1", "wood_1", "metal_1"]
+
+    manual:
+      slot_to_key:
+        mat1: "mat1"
+      fallback_key: "mat1"
+
+  # Example 2: composited / multi-slot object.
+  # Different Blender material slots are assigned to different abstract keys.
+  - name: "composited_material_example"
+    obj_path: '/path/to/replica_cad_annotate/example_chair.glb'
+    enabled: true
+    output_subdir: "composited_material_example"
+
+    material_candidates:
+      mat1: ["wood_1", "wood_2", "metal_1"]       # e.g., legs/frame
+      mat2: ["fabric_1", "fabric_2", "leather_1"] # e.g., seat/back
+
+    manual:
+      # blender slot name -> material key
+      slot_to_key:
+        mat1: "mat1"
+        mat2: "mat2"
+      fallback_key: "mat2"

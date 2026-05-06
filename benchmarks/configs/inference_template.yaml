@@ -1,0 +1,40 @@
+# Inference template for benchmarks/scripts/inference.py.
+# Recommended command:
+#   cd /path/to/MatPredict/benchmarks
+#   python scripts/inference.py --config ./configs/inference_template.yaml
+#
+# Model choice must match the checkpoint:
+# - resnet50_unet
+# - swin_t_unet
+#
+# Task choice must also match the checkpoint:
+# - Inverse rendering: task_mode: pbr
+#   Saves pred_albedo.png, pred_roughness.png, pred_metallic.png, and panel.png.
+# - Material segmentation: task_mode: material
+#   Set material_num_classes. Saves pred_material_ids.png,
+#   pred_material_color.png, and panel.png.
+#
+# Split protocol note:
+# Single-image inference does not use split_file. Use a checkpoint trained under
+# the object-disjoint or variance-disjoint protocol you want to report, and keep
+# that protocol name in checkpoint/output_dir for clarity.
+
+model_name: swin_t_unet
+checkpoint: ./outputs/object_disjoint_swin_t_pbr/checkpoints/swin_t_unet_best.pth
+input: '/path/to/input_rgb.png'
+output_dir: ./pred_outputs/object_disjoint_swin_t_pbr
+
+image_size: 512
+
+# Use pbr for inverse rendering, or material for material segmentation.
+task_mode: pbr
+material_num_classes: null
+
+# Optional object mask. Set null to disable masking.
+mask: '/path/to/input_mask.png'
+
+log_path: logs/infer_{ts}.log
+
+# Timing (for stable latency report)
+warmup_steps: 5
+repeat_steps: 20
