@@ -219,13 +219,3 @@ For `task_mode: material`, inference writes:
 - `pred_material_color.png`
 - `panel.png`
 
-<!-- ## Citation
-
-```bibtex
-@dataset{chen2025matpredict,
-  title  = {MatPredict: A Dataset and Benchmark for Learning Material Properties of Diverse Indoor Objects},
-  author = {Yuzhen Chen and Hojun Son and Arpan Kusari},
-  year   = {2025},
-  url    = {https://huggingface.co/datasets/UMTRI/MatPredict}
-}
-``` -->
