@@ -4,7 +4,6 @@ import argparse
 import itertools
 import json
 import os
-import re
 import shutil
 
 import bpy
@@ -136,6 +135,12 @@ def normalize_slot_name(name):
     return name.lower().split(".")[0]
 
 
+def set_material_label_id(material_obj, label_id):
+    label_id = int(label_id)
+    material_obj.blender_obj["label_id"] = label_id
+    material_obj.blender_obj.pass_index = label_id
+
+
 def assign_materials_manual(objs, manual_cfg, variant_map, materials_root):
     slot_to_key = manual_cfg.get("slot_to_key", {})
     fallback_key = manual_cfg.get("fallback_key")
@@ -159,12 +164,12 @@ def assign_materials_manual(objs, manual_cfg, variant_map, materials_root):
             if cache_key not in material_cache:
                 mat_path = os.path.join(materials_root, material_name)
                 material_cache[cache_key] = load_pbr_material(f"{key}_{material_name}", mat_path)
-                material_cache[cache_key].blender_obj["label_id"] = int(label_id_map.get(key, 0))
+                set_material_label_id(material_cache[cache_key], label_id_map.get(key, 0))
             obj.set_material(i, material_cache[cache_key])
 
 
 def assign_uniform_material(objs, material_obj, label_id=1):
-    material_obj.blender_obj["label_id"] = int(label_id)
+    set_material_label_id(material_obj, label_id)
     for obj in objs:
         mats = obj.get_materials()
         if not mats:
@@ -172,28 +177,6 @@ def assign_uniform_material(objs, material_obj, label_id=1):
             continue
         for idx in range(len(mats)):
             obj.set_material(idx, material_obj)
-
-
-def build_label_id_map(variant_map):
-    label_map = {}
-    material_to_id = {}
-    next_id = 1
-
-    def _sort_key(k):
-        m = re.fullmatch(r"mat(\d+)", str(k).lower())
-        if m:
-            return (0, int(m.group(1)))
-        return (1, str(k))
-
-    for key in sorted((variant_map or {}).keys(), key=_sort_key):
-        material_name = (variant_map or {}).get(key)
-        if material_name in material_to_id:
-            label_map[key] = material_to_id[material_name]
-            continue
-        label_map[key] = next_id
-        material_to_id[material_name] = next_id
-        next_id += 1
-    return label_map
 
 
 def collect_world_vertices(objs):
@@ -414,329 +397,6 @@ def _link_value_or_default(nodes, links, source_input, target_input):
         target_input.default_value = 0.0
 
 
-def add_shader_aov_outputs():
-    scene = bpy.context.scene
-    view_layer = bpy.context.view_layer
-    aov_defs = {
-        "basecolor": {"name": "aov_basecolor", "type": "COLOR"},
-        "roughness": {"name": "aov_roughness", "type": "VALUE"},
-        "metallic": {"name": "aov_metallic", "type": "VALUE"},
-        "opacity": {"name": "aov_opacity", "type": "VALUE"},
-        "label": {"name": "aov_label", "type": "VALUE"},
-        "normal_tex": {"name": "aov_normal_tex", "type": "COLOR"},
-        "normal_obj": {"name": "aov_normal_obj", "type": "COLOR"},
-    }
-
-    for cfg in aov_defs.values():
-        name = cfg["name"]
-        if view_layer.aovs.get(name) is None:
-            aov = view_layer.aovs.add()
-            aov.name = name
-            aov.type = cfg["type"]
-        else:
-            view_layer.aovs[name].type = cfg["type"]
-
-    for mat in bpy.data.materials:
-        if not mat.use_nodes:
-            continue
-        nodes = mat.node_tree.nodes
-        links = mat.node_tree.links
-        bsdf = next((n for n in nodes if n.type == "BSDF_PRINCIPLED"), None)
-        if bsdf is None:
-            continue
-
-        for n in [n for n in nodes if n.type == "OUTPUT_AOV"]:
-            nodes.remove(n)
-        for n in [n for n in nodes if n.type == "VALUE" and n.name.startswith("LABEL_ID_VALUE")]:
-            nodes.remove(n)
-
-        for key, cfg in aov_defs.items():
-            aov_name = cfg["name"]
-            out = nodes.new("ShaderNodeOutputAOV")
-            out.name = f"OUT_{aov_name}"
-            out.aov_name = aov_name
-
-            if key == "normal_tex":
-                if bsdf.inputs["Normal"].links:
-                    nm_node = bsdf.inputs["Normal"].links[0].from_node
-                    if nm_node.type == "NORMAL_MAP" and nm_node.inputs["Color"].links:
-                        links.new(nm_node.inputs["Color"].links[0].from_socket, out.inputs["Color"])
-                    else:
-                        links.new(bsdf.inputs["Normal"].links[0].from_socket, out.inputs["Color"])
-                else:
-                    out.inputs["Color"].default_value = (0.5, 0.5, 1.0, 1.0)
-            elif key == "normal_obj":
-                # True geometric normal, independent from normal/bump textures.
-                geom = nodes.new("ShaderNodeNewGeometry")
-                scale = nodes.new("ShaderNodeVectorMath")
-                scale.operation = "SCALE"
-                scale.inputs["Scale"].default_value = 0.5
-                bias = nodes.new("ShaderNodeVectorMath")
-                bias.operation = "ADD"
-                bias.inputs[1].default_value = (0.5, 0.5, 0.5)
-                links.new(geom.outputs["True Normal"], scale.inputs[0])
-                links.new(scale.outputs["Vector"], bias.inputs[0])
-                links.new(bias.outputs["Vector"], out.inputs["Color"])
-            elif key == "basecolor":
-                _link_socket_or_default(nodes, links, bsdf.inputs["Base Color"], out.inputs["Color"])
-            elif key == "roughness":
-                _link_value_or_default(nodes, links, bsdf.inputs["Roughness"], out.inputs["Value"])
-            elif key == "metallic":
-                _link_value_or_default(nodes, links, bsdf.inputs["Metallic"], out.inputs["Value"])
-            elif key == "opacity":
-                _link_value_or_default(nodes, links, bsdf.inputs["Alpha"], out.inputs["Value"])
-            elif key == "label":
-                val_node = nodes.new("ShaderNodeValue")
-                val_node.name = "LABEL_ID_VALUE"
-                val_node.outputs["Value"].default_value = float(mat.get("label_id", 0.0))
-                links.new(val_node.outputs["Value"], out.inputs["Value"])
-
-    return aov_defs
-
-
-def setup_compositor_outputs(output_dir, aov_defs, rgb_exposure=1.0, depth_scale=5000, depth_max_m=50.0):
-    _ = (depth_scale, depth_max_m)  # reserved for compatibility
-    scene = bpy.context.scene
-    view_layer = bpy.context.view_layer
-    view_layer.use_pass_z = True
-    scene.use_nodes = True
-    tree = scene.node_tree
-    tree.nodes.clear()
-    links = tree.links
-
-    tmp_root = os.path.join(output_dir, "_tmp_channels")
-    os.makedirs(tmp_root, exist_ok=True)
-    rl = tree.nodes.new("CompositorNodeRLayers")
-
-    def _link_linear_to_srgb(in_socket, out_socket):
-        # Prefer OCIO color-space conversion (more faithful than pure gamma).
-        try:
-            csc = tree.nodes.new("CompositorNodeConvertColorSpace")
-            try:
-                csc.from_color_space = "Linear"
-                csc.to_color_space = "sRGB"
-            except Exception:
-                csc.from_color_space = "scene_linear"
-                csc.to_color_space = "sRGB"
-            links.new(in_socket, csc.inputs["Image"])
-            links.new(csc.outputs["Image"], out_socket)
-            return
-        except Exception:
-            pass
-
-        # Fallback approximation.
-        gamma = tree.nodes.new("CompositorNodeGamma")
-        gamma.inputs["Gamma"].default_value = 1.0 / 2.2
-        links.new(in_socket, gamma.inputs["Image"])
-        links.new(gamma.outputs["Image"], out_socket)
-
-    rgb_out = tree.nodes.new("CompositorNodeOutputFile")
-    rgb_out.base_path = os.path.join(tmp_root, "images")
-    rgb_out.format.file_format = "PNG"
-    rgb_out.format.color_mode = "RGBA"
-    rgb_out.format.color_depth = "8"
-    rgb_out.format.compression = 100
-    rgb_out.file_slots[0].path = "frame_"
-
-    depth_out = tree.nodes.new("CompositorNodeOutputFile")
-    depth_out.base_path = os.path.join(tmp_root, "depth")
-    depth_out.format.file_format = "OPEN_EXR"
-    depth_out.format.color_mode = "RGBA"
-    depth_out.format.color_depth = "16"
-    try:
-        depth_out.format.exr_codec = "PIZ"
-    except Exception:
-        pass
-    depth_out.file_slots[0].path = "frame_"
-
-    available = [sock.name for sock in rl.outputs]
-    print("[AOV] RenderLayer outputs:", available)
-    alpha_socket_name = "Alpha" if "Alpha" in available else None
-
-    # Use bpy/compositor display conversion path.
-    rgb_exposure_node = tree.nodes.new("CompositorNodeExposure")
-    rgb_exposure_node.inputs["Exposure"].default_value = float(rgb_exposure)
-    links.new(rl.outputs["Image"], rgb_exposure_node.inputs["Image"])
-    if alpha_socket_name is not None:
-        rgb_set_alpha = tree.nodes.new("CompositorNodeSetAlpha")
-        _link_linear_to_srgb(rgb_exposure_node.outputs["Image"], rgb_set_alpha.inputs["Image"])
-        links.new(rl.outputs[alpha_socket_name], rgb_set_alpha.inputs["Alpha"])
-        links.new(rgb_set_alpha.outputs["Image"], rgb_out.inputs[0])
-    else:
-        _link_linear_to_srgb(rgb_exposure_node.outputs["Image"], rgb_out.inputs[0])
-
-    depth_socket_name = None
-    for candidate in ("Depth", "Z"):
-        if candidate in available:
-            depth_socket_name = candidate
-            break
-    if depth_socket_name is not None:
-        # Make EXR depth easier to inspect: keep valid range [0, depth_max_m], background -> 0.
-        less_than = tree.nodes.new("CompositorNodeMath")
-        less_than.operation = "LESS_THAN"
-        less_than.inputs[1].default_value = float(depth_max_m)
-
-        mul_mask = tree.nodes.new("CompositorNodeMath")
-        mul_mask.operation = "MULTIPLY"
-
-        min_clip = tree.nodes.new("CompositorNodeMath")
-        min_clip.operation = "MINIMUM"
-        min_clip.inputs[1].default_value = float(depth_max_m)
-
-        links.new(rl.outputs[depth_socket_name], less_than.inputs[0])
-        links.new(rl.outputs[depth_socket_name], mul_mask.inputs[0])
-        links.new(less_than.outputs[0], mul_mask.inputs[1])
-        links.new(mul_mask.outputs[0], min_clip.inputs[0])
-
-        depth_for_obj = min_clip.outputs[0]
-        if alpha_socket_name is not None:
-            mul_alpha = tree.nodes.new("CompositorNodeMath")
-            mul_alpha.operation = "MULTIPLY"
-            links.new(depth_for_obj, mul_alpha.inputs[0])
-            links.new(rl.outputs[alpha_socket_name], mul_alpha.inputs[1])
-            depth_for_obj = mul_alpha.outputs[0]
-
-        depth_rgb = tree.nodes.new("CompositorNodeCombRGBA")
-        links.new(depth_for_obj, depth_rgb.inputs["R"])
-        links.new(depth_for_obj, depth_rgb.inputs["G"])
-        links.new(depth_for_obj, depth_rgb.inputs["B"])
-        if alpha_socket_name is not None:
-            links.new(rl.outputs[alpha_socket_name], depth_rgb.inputs["A"])
-        else:
-            depth_rgb.inputs["A"].default_value = 1.0
-        links.new(depth_rgb.outputs["Image"], depth_out.inputs[0])
-    else:
-        print("[WARN] Depth/Z socket not found, skip depth output.")
-
-    socket_map = {}
-
-    for cfg in aov_defs.values():
-        aov_name = cfg["name"]
-        socket_name = None
-        for candidate in (aov_name, f"AOV {aov_name}"):
-            if candidate in available:
-                socket_name = candidate
-                break
-        if socket_name is None:
-            print(f"[WARN] AOV socket not found for {aov_name}, skip.")
-            continue
-
-        socket_map[aov_name] = socket_name
-
-        if aov_name == "aov_basecolor":
-            out_srgb = tree.nodes.new("CompositorNodeOutputFile")
-            out_srgb.base_path = os.path.join(tmp_root, "albedo")
-            out_srgb.format.file_format = "PNG"
-            out_srgb.format.color_mode = "RGBA"
-            out_srgb.format.color_depth = "8"
-            out_srgb.format.compression = 100
-            out_srgb.file_slots[0].path = "frame_"
-            if alpha_socket_name is not None:
-                alb_set_alpha = tree.nodes.new("CompositorNodeSetAlpha")
-                _link_linear_to_srgb(rl.outputs[socket_name], alb_set_alpha.inputs["Image"])
-                links.new(rl.outputs[alpha_socket_name], alb_set_alpha.inputs["Alpha"])
-                links.new(alb_set_alpha.outputs["Image"], out_srgb.inputs[0])
-            else:
-                _link_linear_to_srgb(rl.outputs[socket_name], out_srgb.inputs[0])
-        elif aov_name == "aov_normal_tex":
-            out = tree.nodes.new("CompositorNodeOutputFile")
-            out.base_path = os.path.join(tmp_root, "normal_mat")
-            out.format.file_format = "PNG"
-            out.format.color_mode = "RGBA"
-            out.format.color_depth = "8"
-            out.format.compression = 85
-            out.file_slots[0].path = "frame_"
-            if alpha_socket_name is not None:
-                normal_set_alpha = tree.nodes.new("CompositorNodeSetAlpha")
-                links.new(rl.outputs[socket_name], normal_set_alpha.inputs["Image"])
-                links.new(rl.outputs[alpha_socket_name], normal_set_alpha.inputs["Alpha"])
-                links.new(normal_set_alpha.outputs["Image"], out.inputs[0])
-            else:
-                links.new(rl.outputs[socket_name], out.inputs[0])
-        elif aov_name == "aov_normal_obj":
-            out = tree.nodes.new("CompositorNodeOutputFile")
-            out.base_path = os.path.join(tmp_root, "normal_obj")
-            out.format.file_format = "PNG"
-            out.format.color_mode = "RGBA"
-            out.format.color_depth = "8"
-            out.format.compression = 85
-            out.file_slots[0].path = "frame_"
-            if alpha_socket_name is not None:
-                normal_set_alpha = tree.nodes.new("CompositorNodeSetAlpha")
-                links.new(rl.outputs[socket_name], normal_set_alpha.inputs["Image"])
-                links.new(rl.outputs[alpha_socket_name], normal_set_alpha.inputs["Alpha"])
-                links.new(normal_set_alpha.outputs["Image"], out.inputs[0])
-            else:
-                links.new(rl.outputs[socket_name], out.inputs[0])
-
-    def _write_value_rgba(value_socket, folder_name):
-        rgba = tree.nodes.new("CompositorNodeCombRGBA")
-        links.new(value_socket, rgba.inputs["R"])
-        links.new(value_socket, rgba.inputs["G"])
-        links.new(value_socket, rgba.inputs["B"])
-        if alpha_socket_name is not None:
-            links.new(rl.outputs[alpha_socket_name], rgba.inputs["A"])
-        else:
-            rgba.inputs["A"].default_value = 1.0
-
-        out = tree.nodes.new("CompositorNodeOutputFile")
-        out.base_path = os.path.join(tmp_root, folder_name)
-        out.format.file_format = "PNG"
-        out.format.color_mode = "RGBA"
-        out.format.color_depth = "8"
-        out.format.compression = 100
-        out.file_slots[0].path = "frame_"
-        links.new(rgba.outputs["Image"], out.inputs[0])
-
-    # ORM in RGBA: R=AO(1.0), G=Roughness, B=Metallic, A=1.0
-    if {"aov_roughness", "aov_metallic", "aov_opacity"}.issubset(socket_map.keys()):
-        orm = tree.nodes.new("CompositorNodeCombRGBA")
-        if alpha_socket_name is not None:
-            links.new(rl.outputs[alpha_socket_name], orm.inputs["R"])
-            links.new(rl.outputs[alpha_socket_name], orm.inputs["A"])
-        else:
-            orm.inputs["R"].default_value = 1.0
-            orm.inputs["A"].default_value = 1.0
-        links.new(rl.outputs[socket_map["aov_roughness"]], orm.inputs["G"])
-        links.new(rl.outputs[socket_map["aov_metallic"]], orm.inputs["B"])
-
-        orm_out = tree.nodes.new("CompositorNodeOutputFile")
-        orm_out.base_path = os.path.join(tmp_root, "ORM")
-        orm_out.format.file_format = "PNG"
-        orm_out.format.color_mode = "RGBA"
-        orm_out.format.color_depth = "8"
-        orm_out.format.compression = 100
-        orm_out.file_slots[0].path = "frame_"
-        links.new(orm.outputs["Image"], orm_out.inputs[0])
-
-        # Extra visualization outputs (single channel duplicated to RGB).
-        _write_value_rgba(rl.outputs[socket_map["aov_roughness"]], "roughness")
-        _write_value_rgba(rl.outputs[socket_map["aov_metallic"]], "metallic")
-        _write_value_rgba(rl.outputs[socket_map["aov_opacity"]], "opacity")
-    else:
-        print("[WARN] Missing roughness/metallic/opacity AOV, skip ORM output.")
-
-    if "aov_label" in socket_map:
-        label_scale = tree.nodes.new("CompositorNodeMath")
-        label_scale.operation = "MULTIPLY"
-        label_scale.inputs[1].default_value = 1.0 / 255.0
-        links.new(rl.outputs[socket_map["aov_label"]], label_scale.inputs[0])
-
-        label_out = tree.nodes.new("CompositorNodeOutputFile")
-        label_out.base_path = os.path.join(tmp_root, "label")
-        label_out.format.file_format = "PNG"
-        label_out.format.color_mode = "BW"
-        label_out.format.color_depth = "8"
-        label_out.format.compression = 100
-        label_out.file_slots[0].path = "frame_"
-        links.new(label_scale.outputs[0], label_out.inputs[0])
-    else:
-        print("[WARN] Missing label AOV, skip label output.")
-
-    for d in ["images", "albedo", "depth", "ORM", "normal_mat", "normal_obj", "roughness", "metallic", "opacity", "label"]:
-        os.makedirs(os.path.join(tmp_root, d), exist_ok=True)
-
-
 def _list_sorted_files(folder, suffix):
     if not os.path.isdir(folder):
         return []
@@ -745,45 +405,6 @@ def _list_sorted_files(folder, suffix):
         for n in os.listdir(folder)
         if n.lower().endswith(suffix.lower())
     )
-
-
-def finalize_output_layout(output_dir, frames_data):
-    tmp_root = os.path.join(output_dir, "_tmp_channels")
-    final_dirs = ["images", "albedo", "depth", "ORM", "normal_mat", "normal_obj", "roughness", "metallic", "opacity", "label"]
-    for d in final_dirs:
-        os.makedirs(os.path.join(output_dir, d), exist_ok=True)
-
-    files = {
-        "images": _list_sorted_files(os.path.join(tmp_root, "images"), ".png"),
-        "albedo": _list_sorted_files(os.path.join(tmp_root, "albedo"), ".png"),
-        "normal_mat": _list_sorted_files(os.path.join(tmp_root, "normal_mat"), ".png"),
-        "normal_obj": _list_sorted_files(os.path.join(tmp_root, "normal_obj"), ".png"),
-        "ORM": _list_sorted_files(os.path.join(tmp_root, "ORM"), ".png"),
-        "roughness": _list_sorted_files(os.path.join(tmp_root, "roughness"), ".png"),
-        "metallic": _list_sorted_files(os.path.join(tmp_root, "metallic"), ".png"),
-        "opacity": _list_sorted_files(os.path.join(tmp_root, "opacity"), ".png"),
-        "label": _list_sorted_files(os.path.join(tmp_root, "label"), ".png"),
-        "depth": _list_sorted_files(os.path.join(tmp_root, "depth"), ".exr"),
-    }
-    expected = len(frames_data)
-    for k, arr in files.items():
-        if len(arr) != expected:
-            raise RuntimeError(f"{k} file count mismatch: expected {expected}, got {len(arr)}")
-
-    for i in range(expected):
-        stem = f"{i:03d}"
-        shutil.move(files["images"][i], os.path.join(output_dir, "images", f"{stem}.png"))
-        shutil.move(files["albedo"][i], os.path.join(output_dir, "albedo", f"{stem}.png"))
-        shutil.move(files["normal_mat"][i], os.path.join(output_dir, "normal_mat", f"{stem}.png"))
-        shutil.move(files["normal_obj"][i], os.path.join(output_dir, "normal_obj", f"{stem}.png"))
-        shutil.move(files["ORM"][i], os.path.join(output_dir, "ORM", f"{stem}.png"))
-        shutil.move(files["roughness"][i], os.path.join(output_dir, "roughness", f"{stem}.png"))
-        shutil.move(files["metallic"][i], os.path.join(output_dir, "metallic", f"{stem}.png"))
-        shutil.move(files["opacity"][i], os.path.join(output_dir, "opacity", f"{stem}.png"))
-        shutil.move(files["label"][i], os.path.join(output_dir, "label", f"{stem}.png"))
-        shutil.move(files["depth"][i], os.path.join(output_dir, "depth", f"{stem}.exr"))
-
-    shutil.rmtree(tmp_root, ignore_errors=True)
 
 
 def write_transforms_json(output_dir, frames_data):
@@ -810,37 +431,7 @@ def write_transforms_json(output_dir, frames_data):
         json.dump({"frames": frames, "camera_angle_x": camera_angle_x}, fp, indent=2)
 
 
-def write_metadata_json(output_dir, case_obj_path, case_render_cfg, case_variant_map, label_id_map):
-    label_to_material = {}
-    for key, lid in sorted((label_id_map or {}).items(), key=lambda x: (x[1], x[0])):
-        lid_key = str(lid)
-        if lid_key in label_to_material:
-            continue
-        label_to_material[lid_key] = {"key": key, "material": (case_variant_map or {}).get(key)}
-    meta = {
-        "obj_path": case_obj_path,
-        "variant_map": dict(case_variant_map or {}),
-        "label_mapping": {
-            "background": 0,
-            "labels": label_to_material,
-        },
-        "render_summary": {
-            "resolution": case_render_cfg.get("resolution", {}),
-            "samples": bpy.context.scene.cycles.samples if hasattr(bpy.context.scene, "cycles") else None,
-            "camera": case_render_cfg.get("camera", {}),
-            "radius": case_render_cfg.get("radius", {}),
-            "lighting": "generate_dataset_aligned_three_point",
-            "output_structure": ["albedo", "images", "depth", "ORM", "normal_mat", "normal_obj", "roughness", "metallic", "opacity", "label"],
-            "frame_index_format": "3-digit",
-            "depth_format": "EXR",
-        },
-    }
-    with open(os.path.join(output_dir, "metadata.json"), "w", encoding="utf-8") as fp:
-        json.dump(meta, fp, indent=2)
-
-
-
-# --- Overrides for material segmentation labels, channel outputs, and image dedup ---
+# --- Material segmentation labels, channel outputs, and image dedup ---
 _CLIP_MATCHER = {"ready": False, "backend": None, "embed": None}
 
 
@@ -1134,7 +725,6 @@ def add_shader_aov_outputs():
         "metallic": {"name": "aov_metallic", "type": "VALUE"},
         "occlusion": {"name": "aov_occlusion", "type": "VALUE"},
         "opacity": {"name": "aov_opacity", "type": "VALUE"},
-        "label": {"name": "aov_label", "type": "VALUE"},
         "normal_tex": {"name": "aov_normal_tex", "type": "COLOR"},
         "normal_obj": {"name": "aov_normal_obj", "type": "COLOR"},
     }
@@ -1203,12 +793,6 @@ def add_shader_aov_outputs():
                     rgb2bw = nodes.new("ShaderNodeRGBToBW")
                     links.new(ao.outputs["Color"], rgb2bw.inputs["Color"])
                     links.new(rgb2bw.outputs["Val"], out.inputs["Value"])
-            elif key == "label":
-                val_node = nodes.new("ShaderNodeValue")
-                val_node.name = "LABEL_ID_VALUE"
-                val_node.outputs["Value"].default_value = float(mat.get("label_id", 0.0))
-                links.new(val_node.outputs["Value"], out.inputs["Value"])
-
     return aov_defs
 
 
@@ -1217,6 +801,11 @@ def setup_compositor_outputs(output_dir, aov_defs, rgb_exposure=1.0, depth_scale
     scene = bpy.context.scene
     view_layer = bpy.context.view_layer
     view_layer.use_pass_z = True
+    view_layer.use_pass_material_index = True
+    try:
+        view_layer.update()
+    except Exception:
+        pass
     scene.use_nodes = True
     tree = scene.node_tree
     tree.nodes.clear()
@@ -1267,6 +856,10 @@ def setup_compositor_outputs(output_dir, aov_defs, rgb_exposure=1.0, depth_scale
 
     available = [sock.name for sock in rl.outputs]
     alpha_socket_name = "Alpha" if "Alpha" in available else None
+    label_socket_name = next(
+        (candidate for candidate in ("IndexMA", "Material Index", "Index Material") if candidate in available),
+        None,
+    )
 
     rgb_exposure_node = tree.nodes.new("CompositorNodeExposure")
     rgb_exposure_node.inputs["Exposure"].default_value = float(rgb_exposure)
@@ -1419,11 +1012,11 @@ def setup_compositor_outputs(output_dir, aov_defs, rgb_exposure=1.0, depth_scale
     else:
         print("[WARN] Missing roughness/metallic/occlusion AOV, skip ORM output.")
 
-    if "aov_label" in socket_map:
+    if label_socket_name is not None:
         label_scale = tree.nodes.new("CompositorNodeMath")
         label_scale.operation = "MULTIPLY"
         label_scale.inputs[1].default_value = 1.0 / 255.0
-        links.new(rl.outputs[socket_map["aov_label"]], label_scale.inputs[0])
+        links.new(rl.outputs[label_socket_name], label_scale.inputs[0])
 
         label_out = tree.nodes.new("CompositorNodeOutputFile")
         label_out.base_path = os.path.join(tmp_root, "label")
@@ -1433,6 +1026,11 @@ def setup_compositor_outputs(output_dir, aov_defs, rgb_exposure=1.0, depth_scale
         label_out.format.compression = 100
         label_out.file_slots[0].path = "frame_"
         links.new(label_scale.outputs[0], label_out.inputs[0])
+    else:
+        raise RuntimeError(
+            "Material index pass is enabled but no material-index socket was found. "
+            f"Available RenderLayer sockets: {available}"
+        )
 
     for d in ["images", "albedo", "depth", "ORM", "normal_mat", "normal_obj", "label"]:
         os.makedirs(os.path.join(tmp_root, d), exist_ok=True)
@@ -1508,7 +1106,7 @@ def main():
     parser.add_argument("--output_dir", help="Output directory")
     parser.add_argument("--width", type=int, help="Render width")
     parser.add_argument("--height", type=int, help="Render height")
-    args, _ = parser.parse_known_args(parse_blenderproc_args("generate_dataset_single_pass.py"))
+    args, _ = parser.parse_known_args(parse_blenderproc_args("generate_dataset.py"))
 
     obj_path = args.obj_path
     material_dir = args.material_dir
